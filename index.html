@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script>
+  (function() {
+    var GA_ID = 'G-SKTC7ZC3NF';
+    var isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+    if (isLocalDev) return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', GA_ID);
+    document.addEventListener('click', function(e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href*="booth.pm"]') : null;
+      if (!a) return;
+      gtag('event', 'booth_click', { link_url: a.href, link_id: a.id || '', link_text: (a.textContent || '').trim().slice(0, 40) });
+    });
+  })();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="VTuber・配信者向けの週間配信スケジュール(予定表)画像を無料で作成。1週間の予定と立ち絵を入れるだけで、Xに貼れる縦長・横長・正方形のPNG画像と投稿用テキストを作れます。25時表記・登録不要。">
+<link rel="canonical" href="https://uuhai0625.github.io/vtuber-schedule/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="VTuber週間配信スケジュール作成ツール(予定表画像メーカー・立ち絵対応・無料)">
+<meta property="og:description" content="VTuber・配信者向けの週間配信スケジュール(予定表)画像を無料で作成。1週間の予定と立ち絵を入れるだけで、Xに貼れる縦長・横長・正方形のPNG画像と投稿用テキストを作れます。25時表記・登録不要。">
+<meta property="og:url" content="https://uuhai0625.github.io/vtuber-schedule/">
+<title>VTuber週間配信スケジュール作成ツール(予定表画像メーカー・立ち絵対応・無料)</title>
+<style>
+  :root {
+    --bg: #f6f4fa;
+    --panel: #ffffff;
+    --border: #e2deec;
+    --field-border: #8b8698;
+    --text: #2b2833;
+    --muted: #5e5a68;
+    --accent: #6a4fb3;
+    --accent-dark: #4f3891;
+    --soft: #f0ecfa;
+    --warn-bg: #fff4e0;
+    --warn-text: #7a4b00;
+    --locked: #b3aec0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    padding: 24px 20px 18px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.4rem; }
+  header p { margin: 0; opacity: .94; font-size: .9rem; }
+  main { max-width: 900px; margin: 0 auto; padding: 22px 16px 50px; }
+  section.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  section.card h2 { margin: 0 0 6px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .desc { color: var(--muted); font-size: .84rem; margin: 0 0 12px; }
+  .badge { display: inline-block; font-size: .7rem; padding: 2px 8px; border-radius: 999px; background: #fff1cc; color: #7a5600; font-weight: bold; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .hidden { display: none !important; }
+
+  label.field { display: block; margin-bottom: 12px; }
+  .lbl { font-size: .85rem; font-weight: bold; display: block; }
+  .hint { font-size: .75rem; color: var(--muted); font-weight: normal; display: block; margin-top: 2px; }
+  input[type=text], input[type=date], input[type=range], select {
+    width: 100%; padding: 8px 10px; min-height: 44px;
+    border: 1px solid var(--field-border); border-radius: 8px;
+    font-size: 1rem; font-family: inherit; background: #fffefe; color: var(--text);
+  }
+  input[type=range] { padding: 0; border: none; }
+  label.field input, label.field select { margin-top: 5px; }
+  .row2 { display: flex; gap: 12px; }
+  .row2 > * { flex: 1; min-width: 0; }
+  label.check { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: .86rem; cursor: pointer; }
+  label.check input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; }
+  .notice { font-size: .82rem; background: var(--warn-bg); color: var(--warn-text); border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; }
+
+  fieldset.day { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px 10px; margin: 0 0 10px; }
+  fieldset.day.off { background: #f7f6f9; }
+  fieldset.day legend { font-weight: bold; font-size: .95rem; padding: 0 4px; }
+  .day-ops { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .slot { display: grid; grid-template-columns: 110px 84px 130px 1fr 44px; gap: 8px; margin-top: 8px; align-items: center; }
+  .slot .rm { min-height: 44px; border: 1px solid var(--field-border); border-radius: 8px; background: #fff; cursor: pointer; font-size: 1rem; }
+
+  .seg { display: flex; gap: 8px; flex-wrap: wrap; }
+  .seg label { flex: 1; min-width: 120px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    border: 1px solid var(--field-border); border-radius: 8px; padding: 6px 10px; font-size: .86rem; cursor: pointer; background: #fff; text-align: center; }
+  .seg label.on { border-color: var(--accent); background: var(--soft); font-weight: bold; }
+  .seg label.locked { opacity: .55; cursor: default; }
+  .seg label:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,.2); flex-shrink: 0; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .btn {
+    min-height: 44px; padding: 9px 16px; border-radius: 8px; font-size: .88rem; cursor: pointer;
+    border: 1px solid var(--field-border); background: #fff; color: var(--text); font-family: inherit; text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: bold; }
+  .btn.small { padding: 6px 12px; font-size: .82rem; }
+  .btn:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .status { font-size: .8rem; color: var(--muted); margin-top: 6px; min-height: 1.2em; }
+  #previewCanvas { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--border); }
+  #exportImg { max-width: 100%; display: block; margin-top: 10px; border-radius: 8px; }
+
+  .locked-panel { border: 1px dashed var(--locked); border-radius: 10px; padding: 16px; text-align: center; color: var(--muted); background: #faf9fc; }
+  .locked-panel .feat-list { text-align: left; max-width: 520px; margin: 10px auto; font-size: .85rem; padding-left: 1.2em; }
+  .buy-btn { display: inline-block; margin-top: 8px; background: var(--accent-dark); color: #fff; font-weight: bold; padding: 11px 22px; border-radius: 999px; text-decoration: none; font-size: .9rem; }
+  .buy-btn:hover { background: #3a2870; }
+  .saved-item { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .84rem; word-break: break-all; }
+  .saved-item .ops { display: flex; gap: 6px; flex-shrink: 0; }
+  .fine { font-size: .78rem; color: var(--muted); margin: 10px 0 0; }
+  textarea.post { width: 100%; min-height: 90px; padding: 10px; border: 1px solid var(--field-border); border-radius: 8px; font-family: inherit; font-size: .9rem; margin-top: 4px; }
+  .count { font-size: .78rem; color: var(--muted); }
+  .count.over { color: #9b1c1c; font-weight: bold; }
+
+  footer { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; font-size: .78rem; color: var(--muted); }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 600px) {
+    .row2 { flex-direction: column; gap: 0; }
+    .slot { grid-template-columns: 1fr 1fr 1fr 44px; }
+    .slot .title { grid-column: 1 / 5; grid-row: 2; }
+    section.card { padding: 16px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>VTuber週間配信スケジュール作成ツール</h1>
+  <p>1週間の配信予定と立ち絵を入れるだけで、Xに貼れる週間スケジュール画像(予定表)を作れます。登録不要・無料</p>
+</header>
+
+<main>
+
+  <section class="card">
+    <h2>① 基本の設定</h2>
+    <p class="notice hidden" id="dateNotice" role="status"></p>
+    <div class="row2">
+      <label class="field">
+        <span class="lbl">名前・チャンネル名</span>
+        <input type="text" id="in-name" maxlength="24" placeholder="例) 星宮ミナ">
+      </label>
+      <div class="field" style="margin-bottom:12px;">
+        <label class="lbl" for="in-start">週の始まりの日</label>
+        <span class="hint">この日から7日分の予定を作ります</span>
+        <input type="date" id="in-start" min="2000-01-01" max="2099-12-31" style="margin-top:5px;">
+        <div class="btn-row" style="margin-top:6px;">
+          <button class="btn small" type="button" id="prevWeek">← 前の週</button>
+          <button class="btn small" type="button" id="nextWeek">次の週 →</button>
+        </div>
+      </div>
+    </div>
+    <div class="row2">
+      <label class="field">
+        <span class="lbl">見出し</span>
+        <input type="text" id="in-heading" maxlength="24" value="WEEKLY SCHEDULE">
+      </label>
+      <label class="field">
+        <span class="lbl">主な配信先(任意)</span>
+        <select id="in-platform">
+          <option value="">表示しない</option>
+          <option>YouTube</option>
+          <option>Twitch</option>
+          <option>ニコニコ生放送</option>
+          <option>ツイキャス</option>
+          <option>TikTok LIVE</option>
+          <option>Mirrativ</option>
+        </select>
+      </label>
+    </div>
+    <div class="row2">
+      <label class="field">
+        <span class="lbl">ひとこと(画像の下に入ります)</span>
+        <input type="text" id="in-note" maxlength="40" placeholder="例) 変更はXでお知らせします">
+      </label>
+      <label class="field">
+        <span class="lbl">ハッシュタグ(投稿用テキストに入ります)</span>
+        <input type="text" id="in-tags" maxlength="80" placeholder="例) #配信予定 #新人Vtuber">
+      </label>
+    </div>
+    <label class="check"><input type="checkbox" id="opt-jst"> 時刻に「JST」を付ける(海外の視聴者向け)</label>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn small" type="button" id="sampleBtn">サンプルを入れてみる</button>
+      <button class="btn small" type="button" id="resetBtn">入力をすべてリセット</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>② 1週間の予定</h2>
+    <p class="desc">1日3枠まで。時刻は25時(深夜1時)などの深夜表記も選べます。枠は時刻順に並べて画像にします。</p>
+    <div id="days"></div>
+    <a class="btn small" href="#design" style="margin-top:4px;">プレビューを見る ↓</a>
+  </section>
+
+  <section class="card" id="design">
+    <h2>③ デザインと書き出し</h2>
+    <fieldset style="border:none;padding:0;margin:0 0 12px;">
+      <legend class="lbl" style="margin-bottom:5px;">画像のサイズ(どれもXで切れずに表示されます)</legend>
+      <div class="seg" id="sizeSeg"></div>
+    </fieldset>
+    <p class="notice hidden" id="sizeNotice"></p>
+    <fieldset style="border:none;padding:0;margin:0 0 12px;">
+      <legend class="lbl" style="margin-bottom:5px;">テーマ</legend>
+      <div class="seg" id="themeSeg"></div>
+    </fieldset>
+    <label class="field">
+      <span class="lbl">立ち絵(PNG推奨・背景透過、任意)</span>
+      <span class="hint">書き出しサイズが横長・正方形のときは右側に全身、縦長のときは見出しの右に上半身が入ります</span>
+      <input type="file" id="in-chara" accept="image/png,image/jpeg,image/webp">
+    </label>
+    <button class="btn small" type="button" id="clearChara">立ち絵を外す</button>
+
+    
+
+    <label class="check"><input type="checkbox" id="opt-credit" checked> 右下に小さく作成ツール名を入れる</label>
+    <p class="fine" style="margin-top:0;">画像はこのブラウザの中だけで使い、どこにも送信しません(保存もしないので、開き直したときは選び直してください)。使う画像の権利は利用者ご自身でご確認ください。</p>
+
+    <div style="margin-top:12px;">
+      <canvas id="previewCanvas" width="1080" height="1350" role="img" aria-label="スケジュール画像のプレビュー"></canvas>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" type="button" id="exportBtn">PNG画像を書き出す</button>
+      <button class="btn primary hidden" type="button" id="shareBtn">画像を共有・保存(スマホ)</button>
+    </div>
+    <div class="status" id="exportStatus" role="status"></div>
+    <img id="exportImg" class="hidden" alt="書き出したスケジュール画像">
+  </section>
+
+  <section class="card">
+    <h2>④ 投稿用のテキスト</h2>
+    <label class="lbl" for="postShort">投稿の本文用(短い)</label>
+    <textarea class="post" id="postShort" readonly></textarea>
+    <div class="count" id="countShort"></div>
+    <div class="btn-row" style="margin-top:6px;"><button class="btn small" type="button" data-copy="postShort">本文用をコピー</button></div>
+    <label class="lbl" for="postAlt" style="margin-top:12px;">画像の説明(ALT)用(全部の予定)</label>
+    <textarea class="post" id="postAlt" readonly style="min-height:160px;"></textarea>
+    <div class="count" id="countAlt"></div>
+    <div class="btn-row" style="margin-top:6px;"><button class="btn small" type="button" data-copy="postAlt">ALT用をコピー</button></div>
+    <div class="status" id="copyStatus" role="status"></div>
+    <p class="fine">本文の文字数はXの数え方(日本語1字=2)で表示しています。本文は280まで、画像の説明(ALT)は1000字までです。</p>
+  </section>
+
+  <section class="card" id="pro-section">
+    <h2>背景画像・追加テーマ・立ち絵の調整・定期枠の保存 <span class="badge">買い切り版 ¥100</span></h2>
+    <div class="locked-panel">
+      <p>このページの機能(立ち絵入りの画像づくりまで)は無料でそのまま使えます。買い切り版(ダウンロード購入)では、次の機能が増えます:</p>
+      <ul class="feat-list">
+        <li><strong>背景画像の差し込み</strong>(画像は端末の中だけで処理)</li>
+        <li><strong>立ち絵の大きさ・位置の調整</strong></li>
+        <li><strong>追加テーマ3種</strong>: ネオン・和風・ミント</li>
+        <li><strong>定期枠の保存</strong>: 「いつもの週」を複数保存して、次の週にそのまま呼び出し</li>
+      </ul>
+      <p style="font-size:.8rem;">HTMLファイル1つで届きます。パソコンのブラウザで開いて使ってください(スマホではファイルを開けない機種があります)。</p>
+      <a class="buy-btn" href="https://uuhai0625.booth.pm/items/8930512" id="buyLink" target="_blank" rel="noopener">買い切り版を見る(BOOTH・新しいタブ)</a>
+    </div>
+  </section>
+
+  
+
+</main>
+
+<footer>
+  <p id="privacyNote">本ツールは完全にブラウザ内で動作し、入力内容はどこにも送信されません。入力内容はこのブラウザ内にだけ自動保存されます。</p>
+  <p>作った画像は、個人・商用を問わず自由に使えます(クレジット表記は任意です)。ただし差し込んだ立ち絵・背景画像の権利は各権利者にあります。利用条件はご自身でご確認ください。</p>
+  <p>ほかの無料ツールは<a href="https://uuhai0625.booth.pm/" target="_blank" rel="noopener">BOOTHショップ</a>から。不具合・ご要望は BOOTHメッセージ、または X <a href="https://x.com/uuhai0625" target="_blank" rel="noopener">@uuhai0625</a> まで。</p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var EDITION = "free"; // "full" で買い切り完全版
+
+  function track(name, params) {
+    if (!window.dataLayer) return;
+    (function () { window.dataLayer.push(arguments); })("event", name, params || {});
+  }
+  var $ = function (id) { return document.getElementById(id); };
+
+  // 種類(「その他」は画像にラベルを出さない)
+  var CATS = ["雑談", "ゲーム", "歌枠", "ASMR", "コラボ", "企画", "記念配信", "作業", "動画公開", "お知らせ", "その他"];
+  var LIGHT_CAT = ["#e5739c", "#3f86d4", "#9a62d0", "#d06aae", "#d9822b", "#33a073", "#c99a12", "#74818e", "#d9534f", "#5470e8"];
+  var DARK_CAT = ["#ff7eb6", "#4fc3f7", "#b388ff", "#f48fb1", "#ffb74d", "#69f0ae", "#ffd54f", "#b0bec5", "#ff8a80", "#8c9eff"];
+  var MAX_SLOTS = 3;
+  var WD = ["日", "月", "火", "水", "木", "金", "土"];
+  var MINUTES = [0, 5, 10, 15, 20, 30, 40, 45, 50];
+
+  var SIZES = [
+    { key: "portrait", label: "縦長 1080×1350(おすすめ)", w: 1080, h: 1350 },
+    { key: "tall", label: "縦長・大 1080×1440", w: 1080, h: 1440 },
+    { key: "x", label: "横長 1200×675", w: 1200, h: 675 },
+    { key: "square", label: "正方形 1080×1080", w: 1080, h: 1080 }
+  ];
+
+  // テーマ(見出し帯の白文字・土日の日付がコントラスト4.5以上になる色)
+  var THEMES = [
+    { key: "pastel", label: "パステル", dark: false, bg: "#fff4f8", panel: "#ffffff", head: "#b83f72", headText: "#ffffff", text: "#3a2b33", sub: "#6d5864", line: "#f1d3e0", cats: LIGHT_CAT },
+    { key: "night", label: "ナイト", dark: true, bg: "#14172b", panel: "#1f2440", head: "#4450cc", headText: "#ffffff", text: "#f2f3ff", sub: "#b5bbdf", line: "#2f3660", cats: DARK_CAT },
+    { key: "simple", label: "シンプル", dark: false, bg: "#ffffff", panel: "#ffffff", head: "#222222", headText: "#ffffff", text: "#1e1e1e", sub: "#555555", line: "#dddddd", mono: true, cats: LIGHT_CAT }
+  ];
+  var PRO_THEME_PREVIEW = [{ key: "neon", label: "ネオン", head: "#b8007a" }, { key: "wa", label: "和風", head: "#8c2f39" }, { key: "mint", label: "ミント", head: "#1c7562" }];
+  
+  function themeObj() { return THEMES.filter(function (t) { return t.key === state.theme; })[0] || THEMES[0]; }
+
+  // ===== 日付 =====
+  function today0() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  // 既定の週: 今日が月曜なら今日から、それ以外は次の月曜から(来週分を作る人が多いため)
+  function defaultStart() { var d = today0(); var w = d.getDay(); d.setDate(d.getDate() + (w === 1 ? 0 : (8 - w) % 7)); return d; }
+  function toISO(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function parseISO(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); if (!m || +m[1] < 2000 || +m[1] > 2099) return null;
+    var d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return isNaN(d) || toISO(d) !== s ? null : d;
+  }
+
+  // ===== 状態 =====
+  function emptySlot() { return { h: "", m: 0, cat: "雑談", title: "" }; }
+  function emptyWeek() { var d = []; for (var i = 0; i < 7; i++) d.push({ off: false, slots: [emptySlot()] }); return d; }
+  function blankState() {
+    return { name: "", start: toISO(defaultStart()), heading: "WEEKLY SCHEDULE", note: "", tags: "", platform: "", jst: false,
+      size: "portrait", theme: "pastel", credit: true, charaScale: 100, charaX: 0, days: emptyWeek() };
+  }
+  var state = blankState();
+  var chara = null, bgImg = null;
+  function dayDate(i) { var d = parseISO(state.start) || defaultStart(); d.setDate(d.getDate() + i); return d; }
+  function md(d) { return (d.getMonth() + 1) + "/" + d.getDate(); }
+  function timeLabel(s) { return s.h === "" ? "" : s.h + ":" + String(s.m).padStart(2, "0"); }
+  function sortedSlots(day) {
+    return day.slots.filter(function (s) { return s.h !== "" || s.title; })
+      .slice().sort(function (a, b) { return (a.h === "" ? 9999 : a.h * 60 + a.m) - (b.h === "" ? 9999 : b.h * 60 + b.m); });
+  }
+
+  // ===== 入力欄の生成 =====
+  function el(tag, attrs, text) {
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { if (k === "class") e.className = attrs[k]; else e.setAttribute(k, attrs[k]); });
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function renderDays(focusId) {
+    var box = $("days"); box.innerHTML = "";
+    state.days.forEach(function (day, i) {
+      var d = dayDate(i), dl = md(d) + "(" + WD[d.getDay()] + ")";
+      var fs = el("fieldset", { class: "day" + (day.off ? " off" : "") });
+      fs.appendChild(el("legend", null, dl));
+      var ops = el("div", { class: "day-ops" });
+      var offLab = el("label", { class: "check" });
+      var offCb = el("input", { type: "checkbox", id: "off-" + i, "aria-label": dl + "をお休みにする" }); offCb.checked = day.off;
+      offCb.addEventListener("change", function () { day.off = offCb.checked; renderDays("off-" + i); update(); });
+      offLab.appendChild(offCb); offLab.appendChild(document.createTextNode("お休み"));
+      ops.appendChild(offLab);
+      if (i > 0) {
+        var cp = el("button", { type: "button", class: "btn small", id: "copy-" + i, "aria-label": dl + "を前の日と同じ予定にする" }, "前の日と同じ");
+        cp.addEventListener("click", function () { state.days[i] = JSON.parse(JSON.stringify(state.days[i - 1])); renderDays("copy-" + i); update(); });
+        ops.appendChild(cp);
+      }
+      fs.appendChild(ops);
+      if (!day.off) {
+        day.slots.forEach(function (s, j) {
+          var row = el("div", { class: "slot" });
+          var hs = el("select", { id: "h-" + i + "-" + j, "aria-label": dl + "の" + (j + 1) + "枠目 時" });
+          hs.appendChild(el("option", { value: "" }, "時間未定"));
+          for (var h = 0; h <= 29; h++) hs.appendChild(el("option", { value: String(h) }, h + "時" + (h >= 24 ? "(深夜)" : "")));
+          hs.value = s.h === "" ? "" : String(s.h);
+          hs.addEventListener("change", function () { s.h = hs.value === "" ? "" : +hs.value; update(); });
+          var ms = el("select", { "aria-label": dl + "の" + (j + 1) + "枠目 分" });
+          MINUTES.forEach(function (m) { ms.appendChild(el("option", { value: String(m) }, String(m).padStart(2, "0") + "分")); });
+          if (MINUTES.indexOf(s.m) < 0) ms.appendChild(el("option", { value: String(s.m) }, String(s.m).padStart(2, "0") + "分"));
+          ms.value = String(s.m);
+          ms.addEventListener("change", function () { s.m = +ms.value; update(); });
+          var c = el("select", { "aria-label": dl + "の" + (j + 1) + "枠目 種類" });
+          CATS.forEach(function (name) { c.appendChild(el("option", { value: name }, name)); });
+          c.value = s.cat;
+          c.addEventListener("change", function () { s.cat = c.value; update(); });
+          var ti = el("input", { type: "text", class: "title", maxlength: "30", placeholder: "内容(例: ホラーゲームを初見プレイ)", "aria-label": dl + "の" + (j + 1) + "枠目 内容" }); ti.value = s.title;
+          ti.addEventListener("input", function () { s.title = ti.value; update(); });
+          var rm = el("button", { type: "button", class: "rm", id: "rm-" + i + "-" + j, "aria-label": dl + "の" + (j + 1) + "枠目を削除" }, "×");
+          rm.addEventListener("click", function () {
+            if (day.slots.length > 1) day.slots.splice(j, 1); else day.slots[0] = emptySlot();
+            renderDays("h-" + i + "-" + Math.max(0, j - 1)); update();
+          });
+          row.appendChild(hs); row.appendChild(ms); row.appendChild(c); row.appendChild(ti); row.appendChild(rm);
+          fs.appendChild(row);
+        });
+        if (day.slots.length < MAX_SLOTS) {
+          var add = el("button", { type: "button", class: "btn small", style: "margin-top:8px;", "aria-label": dl + "に枠を追加" }, "+ 枠を追加");
+          add.addEventListener("click", function () { day.slots.push(emptySlot()); renderDays("h-" + i + "-" + (day.slots.length - 1)); update(); });
+          fs.appendChild(add);
+        }
+      }
+      box.appendChild(fs);
+    });
+    if (focusId && $(focusId)) $(focusId).focus();
+  }
+
+  function buildSeg(id, items, current, onPick) {
+    var box = $(id); box.innerHTML = "";
+    items.forEach(function (it) {
+      var lab = el("label", { class: (it.key === current ? "on" : "") + (it.locked ? " locked" : "") });
+      var r = el("input", { type: "radio", name: id, value: it.key }); r.checked = it.key === current;
+      if (it.locked) r.disabled = true;
+      r.addEventListener("change", function () {
+        box.querySelectorAll("label").forEach(function (l) { l.classList.toggle("on", l.querySelector("input").checked); });
+        onPick(it.key);
+      });
+      lab.appendChild(r);
+      if (it.swatch) { var sw = el("span", { class: "swatch" }); sw.style.background = it.swatch; lab.appendChild(sw); }
+      lab.appendChild(document.createTextNode(it.label));
+      box.appendChild(lab);
+    });
+  }
+  function renderSegs() {
+    buildSeg("sizeSeg", SIZES, state.size, function (k) { state.size = k; update(); track("size_select", { size: k }); });
+    var items = THEMES.map(function (t) { return { key: t.key, label: t.label, swatch: t.head }; });
+    if (EDITION !== "full") PRO_THEME_PREVIEW.forEach(function (t) { items.push({ key: t.key, label: t.label + "(買い切り版)", swatch: t.head, locked: true }); });
+    buildSeg("themeSeg", items, state.theme, function (k) { state.theme = k; update(); });
+  }
+
+  // ===== 描画 =====
+  var FONT = '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic Medium", "YuGothic", "Yu Gothic", "Meiryo", sans-serif';
+  var segG = (typeof Intl !== "undefined" && Intl.Segmenter) ? new Intl.Segmenter("ja", { granularity: "grapheme" }) : null;
+  function graphemes(s) { if (!segG) return Array.from(s); var o = []; for (var it = segG.segment(s)[Symbol.iterator](), r = it.next(); !r.done; r = it.next()) o.push(r.value.segment); return o; }
+  function fit(ctx, text, maxW) {
+    text = String(text || "");
+    if (ctx.measureText(text).width <= maxW) return text;
+    var chars = graphemes(text);
+    while (chars.length && ctx.measureText(chars.join("") + "…").width > maxW) chars.pop();
+    return chars.join("") + "…";
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, h / 2, w / 2));
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function hexRgb(hex) { var n = parseInt(String(hex).replace("#", ""), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+  function hexA(hex, a) { var c = hexRgb(hex); return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")"; }
+  function lum(hex) { var c = hexRgb(hex).map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+  function contrast(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  function textOn(bg) { return contrast("#ffffff", bg) >= contrast("#1b1b1b", bg) ? "#ffffff" : "#1b1b1b"; }
+  function weekendColor(th, wd) {
+    if (wd === 6) return th.dark ? "#8cc4ff" : "#1f5fa8";
+    if (wd === 0) return th.dark ? "#ff9b9b" : "#b42d2d";
+    return th.text;
+  }
+  function drawCover(ctx, img, x, y, w, h, alignTop) {
+    var s = Math.max(w / img.width, h / img.height);
+    var dw = img.width * s, dh = img.height * s;
+    ctx.drawImage(img, x + (w - dw) / 2, alignTop ? y : y + (h - dh) / 2, dw, dh);
+  }
+  function drawContain(ctx, img, x, y, w, h) {
+    var s = Math.min(w / img.width, h / img.height);
+    var dw = img.width * s, dh = img.height * s;
+    ctx.drawImage(img, x + (w - dw) / 2, y + h - dh, dw, dh);
+  }
+
+  function draw(ctx, W, H) {
+    var th = themeObj();
+    var portrait = H > W * 1.1, landscape = W > H * 1.3;
+    var u = Math.min(W, H) / 675;
+    ctx.save();
+    ctx.fillStyle = th.bg; ctx.fillRect(0, 0, W, H);
+    if (bgImg) { drawCover(ctx, bgImg, 0, 0, W, H, false); ctx.fillStyle = hexA(th.bg, 0.82); ctx.fillRect(0, 0, W, H); }
+
+    var pad = Math.round(W * (landscape ? 0.03 : 0.04));
+    var sc = (state.charaScale || 100) / 100, cxo = (state.charaX || 0) / 100;
+    var charaW = chara && !portrait ? Math.round(W * (landscape ? 0.28 : 0.27)) : 0;
+    var headH = Math.round(H * (portrait ? (chara ? 0.2 : 0.13) : (landscape ? 0.15 : 0.14)));
+    var contentW = W - pad * 2 - charaW;
+    var headW = portrait ? W - pad * 2 : contentW;
+
+    // 見出し帯
+    ctx.fillStyle = th.head;
+    roundRect(ctx, pad, pad, headW, headH - pad * 0.35, 16 * u); ctx.fill();
+    var textRight = portrait && chara ? W * 0.6 : pad + headW;
+    var textX = pad + 22 * u, textW = Math.max(40, textRight - textX - 16 * u);
+    var hTop = pad, hBox = headH - pad * 0.35;
+    ctx.fillStyle = th.headText; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    var range = md(dayDate(0)) + "(" + WD[dayDate(0).getDay()] + ")〜" + md(dayDate(6)) + "(" + WD[dayDate(6).getDay()] + ")" + (state.jst ? " JST" : "");
+    var line1 = (state.heading || "WEEKLY SCHEDULE") + (state.platform ? "  ・" + state.platform : "");
+    ctx.font = "bold " + Math.round(18 * u) + "px " + FONT;
+    ctx.fillText(fit(ctx, line1, textW), textX, hTop + hBox * 0.27);
+    // 2行目: 名前(大)+期間。期間は必ず全部出す
+    var bigSize = Math.round(Math.min(32 * u, hBox * 0.34));
+    ctx.font = Math.round(18 * u) + "px " + FONT;
+    var rangeW = ctx.measureText(range).width;
+    if (state.name) {
+      ctx.font = "bold " + bigSize + "px " + FONT;
+      var nameMax = textW - rangeW - 16 * u;
+      if (nameMax > 60 * u) {
+        var nm = fit(ctx, state.name, nameMax);
+        ctx.fillText(nm, textX, hTop + hBox * 0.66);
+        var nmW = ctx.measureText(nm).width;
+        ctx.font = Math.round(18 * u) + "px " + FONT;
+        ctx.fillText(range, textX + nmW + 14 * u, hTop + hBox * 0.68);
+      } else {
+        ctx.fillText(fit(ctx, state.name, textW), textX, hTop + hBox * 0.56);
+        ctx.font = Math.round(16 * u) + "px " + FONT;
+        ctx.fillText(fit(ctx, range, textW), textX, hTop + hBox * 0.84);
+      }
+    } else {
+      ctx.font = "bold " + bigSize + "px " + FONT;
+      ctx.fillText(fit(ctx, range, textW), textX, hTop + hBox * 0.66);
+    }
+
+    // 立ち絵
+    if (chara) {
+      if (portrait) {
+        // 見出しの右に上半身(上寄せで切り抜く)
+        var areaX = W * 0.6, areaW = W - pad - areaX, areaH = headH + pad * 0.5;
+        var bw = areaW * sc, bh = areaH * sc;
+        ctx.save(); ctx.beginPath(); ctx.rect(W * 0.58, 0, W * 0.42, headH + pad * 0.6); ctx.clip();
+        drawCover(ctx, chara, areaX + (areaW - bw) / 2 + cxo * W * 0.3, pad * 0.2, bw, bh, true);
+        ctx.restore();
+      } else {
+        var cw = charaW * sc, chh = (H - pad * 2) * sc;
+        drawContain(ctx, chara, W - pad - charaW + (charaW - cw) / 2 + cxo * charaW, H - pad - chh, cw, chh);
+      }
+    }
+
+    // 7日分(枠の数に応じて行の高さを配分)
+    var noteH = state.note ? Math.round(30 * u) : 0, creditH = state.credit ? Math.round(14 * u) : 0;
+    var top = pad + headH + 4 * u, bottom = H - pad - noteH - creditH;
+    var weights = state.days.map(function (day) { var n = day.off ? 1 : sortedSlots(day).length; return n >= 3 ? 2.2 : n === 2 ? 1.6 : 1; });
+    var wsum = weights.reduce(function (a, b) { return a + b; }, 0);
+    var unitH = (bottom - top) / wsum;
+    var dateW = Math.round(contentW * (landscape ? 0.13 : 0.17));
+    var y = top;
+    for (var i = 0; i < 7; i++) {
+      var day = state.days[i], d = dayDate(i), rowH = unitH * weights[i];
+      ctx.fillStyle = hexA(th.panel, bgImg ? 0.9 : 1);
+      roundRect(ctx, pad, y + 3 * u, contentW, rowH - 6 * u, 12 * u); ctx.fill();
+      ctx.strokeStyle = th.line; ctx.lineWidth = Math.max(1, 1.5 * u); ctx.stroke();
+      ctx.fillStyle = weekendColor(th, d.getDay());
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.font = "bold " + Math.round(Math.min(28 * u, unitH * 0.4)) + "px " + FONT;
+      ctx.fillText(md(d), pad + dateW / 2, y + rowH / 2 - unitH * 0.13);
+      ctx.font = "bold " + Math.round(Math.min(17 * u, unitH * 0.26)) + "px " + FONT;
+      ctx.fillText(WD[d.getDay()], pad + dateW / 2, y + rowH / 2 + unitH * 0.22);
+      ctx.strokeStyle = th.line; ctx.beginPath(); ctx.moveTo(pad + dateW, y + rowH * 0.18); ctx.lineTo(pad + dateW, y + rowH * 0.82); ctx.stroke();
+
+      var x0 = pad + dateW + 14 * u, x1 = pad + contentW - 14 * u;
+      ctx.textAlign = "left";
+      var slots = day.off ? [] : sortedSlots(day);
+      if (!slots.length) {
+        var label = day.off ? "お休み" : "未定";
+        var lf = Math.round(Math.min(22 * u, unitH * 0.34));
+        ctx.font = "bold " + lf + "px " + FONT;
+        var lw = ctx.measureText(label).width + 28 * u, lh = lf * 1.6;
+        ctx.fillStyle = th.line; roundRect(ctx, x0, y + rowH / 2 - lh / 2, lw, lh, lh / 2); ctx.fill();
+        ctx.fillStyle = th.sub; ctx.fillText(label, x0 + 14 * u, y + rowH / 2);
+        y += rowH; continue;
+      }
+      var n = slots.length, lineH = (rowH - 8 * u) / n;
+      var fs = Math.round(Math.min((landscape ? 24 : 22) * u, lineH * 0.58));
+      ctx.font = "bold " + fs + "px " + FONT;
+      var timeW = Math.max(ctx.measureText("29:59〜").width, ctx.measureText("時間未定").width);
+      for (var j = 0; j < n; j++) {
+        var s = slots[j];
+        var cy = y + 4 * u + lineH * j + lineH / 2;
+        var x = x0;
+        ctx.font = "bold " + fs + "px " + FONT; ctx.fillStyle = th.text;
+        ctx.fillText(s.h === "" ? "時間未定" : timeLabel(s) + "〜", x, cy); x += timeW + 10 * u;
+        var ci = CATS.indexOf(s.cat);
+        if (s.cat !== "その他" && ci >= 0) {
+          var chip = th.mono ? "#444444" : th.cats[ci];
+          ctx.font = "bold " + Math.round(fs * 0.76) + "px " + FONT;
+          var pw = ctx.measureText(s.cat).width + 18 * u, ph = fs * 1.3;
+          ctx.fillStyle = chip; roundRect(ctx, x, cy - ph / 2, pw, ph, ph / 2); ctx.fill();
+          ctx.fillStyle = textOn(chip); ctx.textAlign = "center"; ctx.fillText(s.cat, x + pw / 2, cy + 1); ctx.textAlign = "left";
+          x += pw + 10 * u;
+        }
+        ctx.font = "bold " + fs + "px " + FONT; ctx.fillStyle = th.text;
+        ctx.fillText(fit(ctx, s.title, Math.max(10, x1 - x)), x, cy);
+      }
+      y += rowH;
+    }
+
+    if (state.note) {
+      ctx.fillStyle = th.sub; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.font = "bold " + Math.round(18 * u) + "px " + FONT;
+      ctx.fillText(fit(ctx, state.note, contentW), pad + 4 * u, H - pad - creditH - noteH / 2);
+    }
+    if (state.credit) {
+      ctx.fillStyle = hexA(th.sub, 0.9); ctx.textAlign = "right"; ctx.textBaseline = "alphabetic";
+      ctx.font = Math.round(12 * u) + "px " + FONT;
+      ctx.fillText("VTuber週間配信スケジュール作成ツール", W - pad * 0.5, H - pad * 0.35);
+    }
+    ctx.restore();
+  }
+
+  function sizeObj() { return SIZES.filter(function (s) { return s.key === state.size; })[0] || SIZES[0]; }
+  var raf = 0;
+  function drawPreview() {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function () {
+      var s = sizeObj(), cv = $("previewCanvas");
+      cv.width = s.w; cv.height = s.h;
+      draw(cv.getContext("2d"), s.w, s.h);
+    });
+  }
+
+  // ===== 投稿用テキスト =====
+  // Xの数え方: 日本語など全角は2、半角英数字などは1
+  function xCount(text) {
+    var n = 0;
+    Array.from(text).forEach(function (ch) {
+      var c = ch.codePointAt(0);
+      n += (c <= 0x10FF || (c >= 0x2000 && c <= 0x200D) || (c >= 0x2010 && c <= 0x201F) || (c >= 0x2032 && c <= 0x2037)) ? 1 : 2;
+    });
+    return n;
+  }
+  function rangeText() { return md(dayDate(0)) + "(" + WD[dayDate(0).getDay()] + ")〜" + md(dayDate(6)) + "(" + WD[dayDate(6).getDay()] + ")"; }
+  function postShort() {
+    var lines = ["【" + (state.name ? state.name + " " : "") + "週間配信スケジュール】" + rangeText()];
+    if (state.platform) lines.push("配信先: " + state.platform);
+    if (state.note) lines.push(state.note);
+    if (state.tags.trim()) lines.push(state.tags.trim());
+    return lines.join("\n");
+  }
+  function postAlt() {
+    var lines = [(state.name ? state.name + "の" : "") + "週間配信スケジュール " + rangeText() + (state.jst ? "(時刻はJST)" : "")];
+    state.days.forEach(function (day, i) {
+      var d = dayDate(i), head = md(d) + "(" + WD[d.getDay()] + ") ";
+      if (day.off) { lines.push(head + "お休み"); return; }
+      var slots = sortedSlots(day);
+      if (!slots.length) { lines.push(head + "未定"); return; }
+      slots.forEach(function (s, j) {
+        lines.push((j ? "・" : head) + (s.h === "" ? "時間未定 " : timeLabel(s) + "〜 ") + (s.cat !== "その他" ? "[" + s.cat + "] " : "") + (s.title || ""));
+      });
+    });
+    if (state.note) lines.push(state.note);
+    return lines.join("\n");
+  }
+  function renderPosts() {
+    var a = postShort(), b = postAlt();
+    $("postShort").value = a; $("postAlt").value = b;
+    var na = xCount(a), nb = Array.from(b).length;
+    var ca = $("countShort"), cb = $("countAlt");
+    ca.textContent = "Xの文字数: " + na + " / 280" + (na > 280 ? "(長すぎます。ひとことかハッシュタグを短くしてください)" : "");
+    ca.classList.toggle("over", na > 280);
+    cb.textContent = nb + " / 1000字" + (nb > 1000 ? "(長すぎます。内容を短くしてください)" : "");
+    cb.classList.toggle("over", nb > 1000);
+  }
+
+  // ===== 保存 =====
+  var AUTO_KEY = "vtuber_schedule_auto_v1";
+  function sanitizeSlot(s) {
+    s = s && typeof s === "object" ? s : {};
+    var h = "", m = 0;
+    if (typeof s.h === "number" && Number.isInteger(s.h) && s.h >= 0 && s.h <= 29) h = s.h;
+    if (typeof s.m === "number" && Number.isInteger(s.m) && s.m >= 0 && s.m <= 59) m = s.m;
+    return { h: h, m: m, cat: CATS.indexOf(s.cat) >= 0 ? s.cat : "その他", title: typeof s.title === "string" ? s.title.slice(0, 30) : "" };
+  }
+  function sanitizeDay(d) {
+    var slots = Array.isArray(d && d.slots) ? d.slots.slice(0, MAX_SLOTS).map(sanitizeSlot) : [];
+    if (!slots.length) slots = [emptySlot()];
+    return { off: !!(d && d.off), slots: slots };
+  }
+  function sanitizeDays(days) { return Array.isArray(days) && days.length === 7 ? days.map(sanitizeDay) : null; }
+  function saveAuto() { try { localStorage.setItem(AUTO_KEY, JSON.stringify(state)); } catch (e) {} }
+  function restoreAuto() {
+    try {
+      var d = JSON.parse(localStorage.getItem(AUTO_KEY) || "null");
+      if (!d || typeof d !== "object") return;
+      [["name", 24], ["heading", 24], ["note", 40], ["tags", 80]].forEach(function (k) { if (typeof d[k[0]] === "string") state[k[0]] = d[k[0]].slice(0, k[1]); });
+      if (typeof d.platform === "string" && Array.prototype.some.call($("in-platform").options, function (o) { return o.value === d.platform; })) state.platform = d.platform;
+      if (parseISO(d.start)) state.start = d.start;
+      if (SIZES.some(function (s) { return s.key === d.size; })) state.size = d.size;
+      if (THEMES.some(function (t) { return t.key === d.theme; })) state.theme = d.theme;
+      ["credit", "jst"].forEach(function (k) { if (typeof d[k] === "boolean") state[k] = d[k]; });
+      if (typeof d.charaScale === "number" && d.charaScale >= 60 && d.charaScale <= 160) state.charaScale = d.charaScale;
+      if (typeof d.charaX === "number" && d.charaX >= -40 && d.charaX <= 40) state.charaX = d.charaX;
+      var days = sanitizeDays(d.days); if (days) state.days = days;
+    } catch (e) { try { localStorage.removeItem(AUTO_KEY); } catch (e2) {} }
+  }
+  // 保存されていた週がもう終わっていたら、新しい週に合わせる
+  function rollForwardIfPast() {
+    var s = parseISO(state.start); if (!s) { state.start = toISO(defaultStart()); return; }
+    var end = new Date(s); end.setDate(end.getDate() + 6);
+    if (end < today0()) {
+      var old = md(s);
+      state.start = toISO(defaultStart());
+      var n = $("dateNotice"); n.textContent = "前回の週(" + old + "〜)はもう過ぎているので、" + md(parseISO(state.start)) + "からの週に合わせました。予定は前回のままなので、確認してください。"; n.classList.remove("hidden");
+    }
+  }
+
+  function syncBasics() {
+    $("in-name").value = state.name; $("in-start").value = state.start; $("in-heading").value = state.heading; $("in-note").value = state.note;
+    $("in-tags").value = state.tags; $("in-platform").value = state.platform; $("opt-jst").checked = state.jst; $("opt-credit").checked = state.credit;
+    
+  }
+  var textTimer = null, exportSeq = 0;
+  function update() {
+    exportSeq++;
+    drawPreview();
+    clearTimeout(textTimer);
+    textTimer = setTimeout(function () { renderPosts(); saveAuto(); }, 200);
+    $("exportImg").classList.add("hidden");
+    var multi = state.days.some(function (d) { return !d.off && sortedSlots(d).length >= 2; });
+    var sn = $("sizeNotice");
+    if (state.size === "x" && multi) { sn.textContent = "横長は、1日に2枠以上ある日の文字が小さくなります。スマホのタイムラインで読みやすいのは縦長です。"; sn.classList.remove("hidden"); }
+    else sn.classList.add("hidden");
+  }
+  window.addEventListener("pagehide", function () { saveAuto(); });
+
+  // ===== 書き出し =====
+  var exportUrl = null;
+  var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function fileName() { var s = sizeObj(); return "配信スケジュール_" + toISO(dayDate(0)) + "_" + s.w + "x" + s.h + ".png"; }
+  function makeBlob(cb) {
+    var s = sizeObj();
+    try {
+      var cv = document.createElement("canvas"); cv.width = s.w; cv.height = s.h;
+      draw(cv.getContext("2d"), s.w, s.h);
+      cv.toBlob(function (b) { cb(b); }, "image/png");
+    } catch (e) { cb(null); }
+  }
+  $("exportBtn").addEventListener("click", function () {
+    var status = $("exportStatus"), btn = $("exportBtn"), seq = exportSeq, s = sizeObj();
+    btn.disabled = true; status.textContent = "書き出し中…";
+    makeBlob(function (blob) {
+      btn.disabled = false;
+      if (!blob) { status.textContent = "書き出しに失敗しました。もう一度お試しください。"; return; }
+      if (seq !== exportSeq) { status.textContent = "書き出し中に内容が変わったので、もう一度押してください。"; return; }
+      if (exportUrl) URL.revokeObjectURL(exportUrl);
+      exportUrl = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = exportUrl; a.download = fileName();
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      var img = $("exportImg"); img.src = exportUrl; img.classList.remove("hidden");
+      status.textContent = IS_IOS
+        ? "書き出しました(" + s.w + "×" + s.h + "px)。iPhone・iPadでは「ファイル」アプリに保存されます。写真に入れたいときは、下の画像を長押しして「写真に追加」を選ぶか、「画像を共有・保存」ボタンをお使いください。"
+        : "書き出しました(" + s.w + "×" + s.h + "px)。保存されない場合は、下の画像を右クリック(スマホは長押し)で保存してください。";
+      track("png_export", { size: s.key, theme: state.theme, credit: state.credit ? 1 : 0, chara: chara ? 1 : 0 });
+    });
+  });
+  // スマホ: 共有シートから「画像を保存」やXアプリへ直接渡す
+  (function setupShare() {
+    try {
+      var probe = new File([new Blob(["x"], { type: "image/png" })], "a.png", { type: "image/png" });
+      if (!(navigator.canShare && navigator.canShare({ files: [probe] }))) return;
+    } catch (e) { return; }
+    var sb = $("shareBtn"); sb.classList.remove("hidden");
+    sb.addEventListener("click", function () {
+      var status = $("exportStatus");
+      makeBlob(function (blob) {
+        if (!blob) { status.textContent = "画像を作れませんでした。"; return; }
+        var file = new File([blob], fileName(), { type: "image/png" });
+        navigator.share({ files: [file] }).then(function () { status.textContent = "共有しました。"; track("png_share", { size: state.size }); })
+          .catch(function (e) { if (e && e.name !== "AbortError") status.textContent = "共有できませんでした。「PNG画像を書き出す」をお使いください。"; });
+      });
+    });
+  })();
+
+  var copyTimer = null;
+  document.querySelectorAll("button[data-copy]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      renderPosts();
+      var ta = $(b.getAttribute("data-copy")), st = $("copyStatus");
+      function say(m) { st.textContent = m; clearTimeout(copyTimer); copyTimer = setTimeout(function () { st.textContent = ""; }, 4000); }
+      function done() { say("コピーしました。"); track("text_copy", { kind: b.getAttribute("data-copy") }); }
+      function fallback() {
+        ta.removeAttribute("readonly"); ta.select(); var ok = false;
+        try { ok = document.execCommand("copy"); } catch (e) {}
+        ta.setAttribute("readonly", "");
+        if (ok) done(); else say("コピーできませんでした。テキストを長押し・選択してコピーしてください。");
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, fallback); else fallback();
+    });
+  });
+
+  // ===== 立ち絵(無料版でも使える)・画像の読み込み =====
+  function loadImageFile(file, cb) {
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { alert("PNG・JPEG・WebPの画像を選んでください。"); return; }
+    if (file.size > 20 * 1024 * 1024) { alert("画像が大きすぎます(20MBまで)。"); return; }
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (!w || !h || w * h > 40000000) { alert("画像の画素数が大きすぎます(4000万画素まで)。"); return; }
+      // 描画を軽くするため、長辺2400pxまでに縮めて持っておく
+      var s = Math.min(1, 2400 / Math.max(w, h));
+      var c = document.createElement("canvas"); c.width = Math.round(w * s); c.height = Math.round(h * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      cb(c); update();
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); alert("画像を読み込めませんでした。"); };
+    img.src = url;
+  }
+  $("in-chara").addEventListener("change", function (e) { loadImageFile(e.target.files[0], function (img) { chara = img; track("chara_add", {}); }); });
+  $("clearChara").addEventListener("click", function () { chara = null; $("in-chara").value = ""; update(); });
+
+  // ===== 基本の設定のイベント =====
+  $("in-name").addEventListener("input", function (e) { state.name = e.target.value; update(); });
+  $("in-heading").addEventListener("input", function (e) { state.heading = e.target.value; update(); });
+  $("in-note").addEventListener("input", function (e) { state.note = e.target.value; update(); });
+  $("in-tags").addEventListener("input", function (e) { state.tags = e.target.value; update(); });
+  $("in-platform").addEventListener("change", function (e) { state.platform = e.target.value; update(); });
+  $("opt-jst").addEventListener("change", function (e) { state.jst = e.target.checked; update(); });
+  $("opt-credit").addEventListener("change", function (e) { state.credit = e.target.checked; update(); });
+  $("in-start").addEventListener("change", function (e) {
+    if (parseISO(e.target.value)) { state.start = e.target.value; $("dateNotice").classList.add("hidden"); renderDays(); update(); }
+  });
+  $("in-start").addEventListener("blur", function (e) { if (!parseISO(e.target.value)) e.target.value = state.start; });
+  function shiftWeek(n) { var d = parseISO(state.start) || defaultStart(); d.setDate(d.getDate() + 7 * n); state.start = toISO(d); $("in-start").value = state.start; $("dateNotice").classList.add("hidden"); renderDays(); update(); }
+  $("prevWeek").addEventListener("click", function () { shiftWeek(-1); });
+  $("nextWeek").addEventListener("click", function () { shiftWeek(1); });
+
+  $("sampleBtn").addEventListener("click", function () {
+    var filled = state.days.some(function (d) { return d.off || sortedSlots(d).length; });
+    if (filled && !confirm("今の予定をサンプルに置き換えますか?")) return;
+    var S = [[21, 0, "ゲーム", "ホラーゲームを初見プレイ"], [20, 0, "雑談", "まったり雑談"], null, [22, 0, "歌枠", "アニソン縛り歌枠"], [21, 0, "コラボ", "4人でマイクラ建築"], [[13, 0, "企画", "重大発表あり!"], [21, 0, "ゲーム", "クリアまで耐久"]], [25, 0, "ASMR", "寝かしつけASMR"]];
+    state.days = S.map(function (x) {
+      if (!x) return { off: true, slots: [emptySlot()] };
+      var list = Array.isArray(x[0]) ? x : [x];
+      return { off: false, slots: list.map(function (v) { return { h: v[0], m: v[1], cat: v[2], title: v[3] }; }) };
+    });
+    if (!state.name) state.name = "星宮ミナ";
+    if (!state.note) state.note = "変更はXでお知らせします";
+    syncBasics(); renderDays(); update();
+  });
+
+  $("resetBtn").addEventListener("click", function () {
+    if (!confirm("入力内容をすべてリセットしますか?")) return;
+    state = blankState(); chara = null; bgImg = null; $("in-chara").value = "";
+    
+    try { localStorage.removeItem(AUTO_KEY); } catch (e) {}
+    $("dateNotice").classList.add("hidden");
+    syncBasics(); renderSegs(); renderDays(); update();
+  });
+
+  
+
+  if (EDITION !== "full") {
+    $("privacyNote").innerHTML = '入力した予定や画像はどこにも送信されません(予定はこのブラウザ内にだけ自動保存されます)。このページでは利用状況の把握のためにアクセス解析(Google Analytics)を使っています。<a href="https://policies.google.com/technologies/partner-sites?hl=ja" target="_blank" rel="noopener">Googleによるデータの使用について</a>';
+  }
+
+  restoreAuto();
+  rollForwardIfPast();
+  syncBasics(); renderSegs(); renderDays(); update(); renderPosts();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawPreview);
+})();
+</script>
+</body>
+</html>
