@@ -142,6 +142,10 @@
     .slot .title { grid-column: 1 / 5; grid-row: 2; }
     section.card { padding: 16px 14px; }
   }
+  .guide { font-size: .88rem; }
+  .guide h3 { font-size: .95rem; margin: 14px 0 4px; }
+  .guide ul, .guide ol { padding-left: 1.3em; margin: 6px 0; }
+  .guide li { margin: 4px 0; }
 </style>
 <!--ANSHIN_CSS_START--><style>:root{--anshin-w:868px;--anshin-pad:16px}.anshin-strip,.anshin{box-sizing:border-box;width:min(var(--anshin-w),calc(100% - 2 * var(--anshin-pad)));margin-left:auto;margin-right:auto}.anshin-strip{list-style:none;margin-top:10px;margin-bottom:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:.8rem;line-height:1.5}.anshin-strip li{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border:1px solid rgba(20,120,90,.45);border-radius:999px;background:rgba(20,120,90,.07)}.anshin-strip li.anshin-more{border:0;background:none;padding:3px 2px}.anshin-strip a,.anshin a{color:inherit}.anshin{margin-top:18px;margin-bottom:18px;padding:14px 18px;border:1px solid rgba(20,120,90,.45);border-radius:10px;background:rgba(20,120,90,.05);font-size:.86rem;line-height:1.7}.anshin h2{font-size:1rem;margin:0 0 6px}.anshin p{margin:0 0 6px}.anshin ul{margin:0;padding-left:1.2em}.anshin li{margin:3px 0}.anshin details{margin-top:6px}.anshin summary{cursor:pointer;font-weight:bold}.anshin .anshin-meta{margin:8px 0 0;font-size:.8rem;opacity:.85}@media print{.anshin,.anshin-strip{display:none!important}}</style><!--ANSHIN_CSS_END-->
 <!--UPSELL_CSS_START--><style>.upsell-top{box-sizing:border-box;width:min(var(--anshin-w,880px),calc(100% - 2 * var(--anshin-pad,16px)));margin:12px auto 0;font-size:.85rem;line-height:1.6}.upsell-top a{color:inherit}.upsell-assure{list-style:none;margin:12px 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:6px 8px;font-size:.8rem;line-height:1.5}.upsell-assure li{padding:3px 10px;border:1px solid rgba(20,120,90,.45);border-radius:12px;background:rgba(20,120,90,.06)}.upsell-terms{margin:8px 0 0;font-size:.78rem;line-height:1.6;opacity:.85}.upsell-toast{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:9999;box-sizing:border-box;width:min(520px,calc(100% - 24px));padding:14px 56px 14px 16px;border-radius:12px;background:#fff;color:#222;border:1px solid #c9c2d6;box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:.88rem;line-height:1.6}.upsell-toast p{margin:0 0 6px;font-weight:bold}.upsell-toast ul{margin:0 0 10px;padding-left:1.2em}.upsell-toast li{margin:2px 0}.upsell-toast .upsell-note{display:block;margin-top:6px;font-size:.75rem;color:#555}.upsell-toast .upsell-go{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:8px;background:#c9283e;color:#fff;font-weight:bold;text-decoration:none}.upsell-toast .upsell-go:focus-visible,.upsell-toast .upsell-x:focus-visible{outline:3px solid #2560c4;outline-offset:2px}.upsell-toast .upsell-x{position:absolute;top:4px;right:4px;width:44px;height:44px;border:0;border-radius:8px;background:transparent;color:#555;font-size:1.3rem;line-height:1;cursor:pointer}.upsell-inline{white-space:nowrap;color:inherit;text-decoration:underline;text-underline-offset:2px}@media print{.upsell-top,.upsell-assure,.upsell-terms,.upsell-toast,.upsell-inline{display:none!important}}</style><!--UPSELL_CSS_END-->
@@ -290,6 +294,22 @@
 
   
 
+  <section class="card guide no-print" id="guide">
+    <h2>配信スケジュール表の作り方</h2>
+    <ol>
+      <li><strong>基本の設定を入れる</strong>: 名前・チャンネル名と週の始まりの日を入れます。見出しや主な配信先、画像の下に入る「ひとこと」も変えられます。</li>
+      <li><strong>1週間の予定を入れる</strong>: 日ごとに時刻・種類・内容を入れます(1日3枠まで)。配信しない日は「お休み」にチェックします。</li>
+      <li><strong>サイズとテーマを選ぶ</strong>: 画像のサイズとテーマを選び、立ち絵があれば読み込みます。</li>
+      <li><strong>PNG画像を書き出す</strong>: プレビューを確かめて「PNG画像を書き出す」を押します。</li>
+      <li><strong>投稿用のテキストをコピーする</strong>: 本文用と画像の説明(ALT)用をコピーして、画像と一緒に投稿します。</li>
+    </ol>
+    <h3>見やすい週間スケジュールのコツ</h3>
+    <ul>
+      <li><strong>お休みの日もはっきり書く</strong>: 空欄のままだと「未定」と表示されます。配信しない日は「お休み」にすると、見る人が迷いません。</li>
+      <li><strong>深夜の時刻は25時のように書く</strong>: 日付をまたぐ配信は、前の日の枠で時刻に「25時(深夜)」を選ぶと、画像には「25:00〜」と出て、何曜日の配信か伝わります。海外の視聴者がいるなら「JST」を付けます。</li>
+      <li><strong>スマホで見ることを前提にサイズを選ぶ</strong>: 1日に2枠以上ある日は横長だと文字が小さくなります。迷ったら縦長(1080×1350)を選びます。</li>
+    </ul>
+  </section>
 </main>
 
 <!--ANSHIN_START-->
